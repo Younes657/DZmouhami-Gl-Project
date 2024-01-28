@@ -1,0 +1,13 @@
+flask
+flask-smorest
+python-dotenv
+sqlalchemy
+flask-sqlalchemy
+Flask-JWT-Extended 
+passlib
+flask-migrate
+pymysql
+cryptography
+#for the scraping
+beautifulsoup4
+requests
