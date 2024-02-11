@@ -3,10 +3,10 @@ from flask_smorest import abort, Blueprint
 from flask.views import MethodView
 
 from db import db
-from models import ReviewModel, LawyerModel
+from models import ReviewModel, LawyerModel, UserModel
 from sqlalchemy.exc import SQLAlchemyError
 
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from schemas import ReviewSchema
 blp = Blueprint("reviews" , __name__, description="Opearations on reviews")
@@ -21,6 +21,7 @@ class Reviews_Lowyer(MethodView):
     
 @blp.route("/lawyer/<int:lawy_id>/review")
 class Lawyer_review(MethodView):
+    @jwt_required()
     @blp.arguments(ReviewSchema)
     @blp.response(201 , ReviewSchema)
     def post(self , review_data , lawy_id):
@@ -34,6 +35,9 @@ class Lawyer_review(MethodView):
     
 @blp.route("/user/reviews")
 class User_reviews(MethodView):
+    @jwt_required()
     @blp.response(200 , ReviewSchema(many=True))
     def get(self):
-        pass
+        user = UserModel.query.get_or_404(get_jwt_identity()) #get_jwt().get("sub")
+        reviews = user.reviews
+        return reviews

@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from passlib.hash import pbkdf2_sha256 #a hashing algorithm
 from flask_jwt_extended import create_access_token,create_refresh_token,get_jwt_identity , jwt_required,get_jwt
-
+from blocklist import BLOKLIST
 
 from schemas import UserSchema
 blp = Blueprint("users" , __name__, description="Opearations on users")
@@ -20,7 +20,7 @@ class UserRegistration(MethodView):
     def post(self, user_data):
         if UserModel.query.filter(UserModel.username == user_data["username"]).first():
             abort(409, message= "user already exist!!") #409 conflict
-        emailUser = user_data["email"] if user_data["email"] else None
+        emailUser = user_data["email"] if user_data["email"]  else ""
         user = UserModel(
             username = user_data["username"],
             password = pbkdf2_sha256.hash(user_data["password"]),
@@ -45,6 +45,11 @@ class User(MethodView):
         db.session.commit()
         return {"message" : "user deleted."}, 200 #default
 
+@blp.route("/users")
+class Users(MethodView):
+    @blp.response(200 , UserSchema(many=True))
+    def get(self):
+        return UserModel.query.all()
 
 @blp.route("/login")
 class UserLogin(MethodView):
@@ -59,12 +64,13 @@ class UserLogin(MethodView):
         abort(401, message="Invalid Credentials")
 
 
+
 @blp.route("/logout")
 class UserLogout(MethodView):
     @jwt_required() #optional = True if you want to log out the user and false otherwise
     def post(self):
         jti = get_jwt()["jti"] #get_jwt().get("jti") 
-        #BLOKLIST.add(jti)
+        BLOKLIST.add(jti)
         return {"message": "Successfully logged out"}
 
 

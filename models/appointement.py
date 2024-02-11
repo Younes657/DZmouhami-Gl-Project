@@ -11,3 +11,11 @@ class AppointementModel(db.Model):
     __table_args__ = (
         PrimaryKeyConstraint('user_id', 'schedule_id'),
     )
+
+    def to_dict(self):
+        return {
+            'user_id': self.user_id,
+            'schedule_id': self.schedule_id,
+            'user' : self.user,
+            'schedule' : self.schedule
+        }

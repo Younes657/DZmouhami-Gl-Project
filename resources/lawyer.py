@@ -7,6 +7,7 @@ from models import LawyerModel
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_
 
+from flask_jwt_extended import get_jwt , jwt_required
 from standard_functions import scrape_lawyers
 
 from schemas import LawyerSchema
@@ -18,11 +19,12 @@ class lawyer(MethodView):
     def get(self , lawyer_id):
         lawyer = LawyerModel.query.get_or_404(lawyer_id)
         return lawyer
+    
+    @jwt_required()
     def delete(self, lawyer_id):
-        # jwt = get_jwt()
-        # if not jwt.get("is_admin"):
-        #     abort(401 , message  = "admin privillage  required for delete")
-
+        jwt = get_jwt()
+        if not jwt.get("is_admin"):
+            abort(401 , message  = "admin privillage  required for delete")
         lawyer = LawyerModel.query.get_or_404(lawyer_id)
         db.session.delete(lawyer)
         db.session.commit()
@@ -59,6 +61,7 @@ class itemList(MethodView):
         except SQLAlchemyError:
             abort(500, message= SQLAlchemyError._message)
         return lawyer 
+    
 @blp.route("/lawyer/location")
 class SearchLawyerAdd(MethodView):
     @blp.response(200, LawyerSchema(many=True))

@@ -25,22 +25,24 @@ class PlainReviewSchema(Schema):
     title = fields.Str(required=True)
     description =fields.Str(required=True)
     is_recommended = fields.Bool(required=True)
-    rating = fields.Int(dump_only=True)
+    rating = fields.Int()
     
 
-class LawyerSchema(PlainLawyerSchema):
-    reviews = fields.List(fields.Nested(PlainReviewSchema), dump_only = True)
-    
+
 class ReviewSchema(PlainReviewSchema):
-    lawyer_id = fields.Int(required=True , load_only =True)
+    lawyer_id = fields.Int(required=True , dump_only =True)
     lawyer = fields.Nested(PlainLawyerSchema(), dump_only=True)
-    user_id = fields.Int(required=True , load_only =True)
+    user_id = fields.Int(required=True , dump_only =True)
     user = fields.Nested(UserSchema(), dump_only=True)
 
 class LawyerScheduleSchema(Schema):
     id = fields.Int(dump_only=True)
     lawyer_id = fields.Int(required=True , load_only =True)
-    day_id = fields.Int(required=True , load_only =True)
-    time_id = fields.Int(required=True , load_only =True)
+    day_id = fields.Int(required=True)
+    time_id = fields.Int(required=True)
     is_disponible = fields.Bool(required= True)
     lawyer = fields.Nested(PlainLawyerSchema(), dump_only=True)
+
+class LawyerSchema(PlainLawyerSchema):
+    reviews = fields.List(fields.Nested(PlainReviewSchema), dump_only = True)
+    lawyer_scheduler = fields.List(fields.Nested(LawyerScheduleSchema), dump_only = True)

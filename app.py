@@ -11,19 +11,20 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy.orm.exc import NoResultFound
 
-
+from blocklist import BLOKLIST
 import models
 
 from resources.lawyer import blp as LawyerBlueprint
 from resources.review import blp as ReviewBlueprint
 from resources.user import blp as UserBlueprint
+from resources.appointement import blp as AppointementBlueprint
 
 def create_app(db_url = None):
     app = Flask(__name__)
 
     app.config["PROPAGATE_EXCEPTIONS"] = True
     #for documentation / for flask smorest
-    app.config["API_TITLE"] = "Stores REST API"
+    app.config["API_TITLE"] = "lawyers REST API"
     app.config["API_VERSION"] = "v1"
     app.config["OPENAPI_VERSION"] = "3.0.3"
     app.config["OPENAPI_URL_PREFIX"] = "/"
@@ -52,10 +53,11 @@ def create_app(db_url = None):
             command.upgrade(alembic_cfg, "head")
         else:
             print("Database is not empty.")
+
     #jwt configuration
-    # @jwt.token_in_blocklist_loader
-    # def chek_BlockList_tokens(jwt_header, jwt_payload):
-    #     return jwt_payload["jti"] in BLOKLIST    #jti is a key in the payload define each jwt token 
+    @jwt.token_in_blocklist_loader
+    def chek_BlockList_tokens(jwt_header, jwt_payload):
+        return jwt_payload["jti"] in BLOKLIST    #jti is a key in the payload define each jwt token 
     
     @jwt.revoked_token_loader  #when the token is revoked that is the error message 
     def revoked_token_callback(jwt_header, jwt_payload):
@@ -99,10 +101,15 @@ def create_app(db_url = None):
                 }
             ), 401
         )
-
+    @jwt.additional_claims_loader
+    def additional_claims_to_jwt(identity): #identity is what you have used to generate a jwt token in login 
+        if identity == 1 :
+            return {"is_admin" : True}
+        else : # the claims is saved in the jwt when it created not when it's used
+            return {"is_admin" : False}
 
     api.register_blueprint(LawyerBlueprint)
     api.register_blueprint(ReviewBlueprint)
     api.register_blueprint(UserBlueprint)
-
+    api.register_blueprint(AppointementBlueprint)
     return app
